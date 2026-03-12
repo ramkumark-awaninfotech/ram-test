@@ -44,9 +44,9 @@ jobs:
 
       - name: Lint Helm values
         run: |
-          helm lint zabbix-community/zabbix \
-            -f helm/zabbix-values.yaml \
-            --set zabbixServer.enabled=true
+          helm pull zabbix-community/zabbix --untar --untardir /tmp/zabbix-chart
+          helm lint /tmp/zabbix-chart/zabbix \
+            -f helm/zabbix-values.yaml
 
       - name: Validate Kubernetes manifests
         run: |
