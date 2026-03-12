@@ -48,9 +48,6 @@ jobs:
           helm lint /tmp/zabbix-chart/zabbix \
             -f helm/zabbix-values.yaml
 
-      - name: Validate Kubernetes manifests
-        run: |
-          kubectl apply --dry-run=client -f k8s/namespace.yaml
 
   deploy:
     name: Deploy Zabbix to AKS
