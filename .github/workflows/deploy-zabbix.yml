@@ -102,9 +102,9 @@ jobs:
             --wait \
             --debug
 
-      - name: Apply additional manifests
-        run: |
-          kubectl apply -f k8s/ingress.yaml
+    #  - name: Apply additional manifests
+    #    run: |
+      #    kubectl apply -f k8s/ingress.yaml
 
       - name: Verify deployment
         run: bash scripts/verify-deployment.sh ${{ env.NAMESPACE }}
