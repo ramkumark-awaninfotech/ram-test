@@ -29,7 +29,7 @@ postgresql:
     persistence:
       enabled: true
       size: 5Gi
-      storageClass: "default"
+      storageClass: "managed-csi"
 
 zabbixProxy:
   enabled: false
