@@ -98,7 +98,7 @@ jobs:
             --values helm/zabbix-values.yaml \
             --set zabbixServer.enabled=true \
             --set postgresql.auth.existingSecret=zabbix-db-secret \
-            --timeout 10m \
+            --timeout 20m \
             --wait \
             --atomic
 
