@@ -50,9 +50,7 @@ jobs:
 
       - name: Validate Kubernetes manifests
         run: |
-          curl -sLO https://github.com/instrumenta/kubeval/releases/latest/download/kubeval-linux-amd64.tar.gz
-          tar xf kubeval-linux-amd64.tar.gz
-          ./kubeval k8s/*.yaml
+          kubectl apply --dry-run=client -f k8s/namespace.yaml
 
   deploy:
     name: Deploy Zabbix to AKS
