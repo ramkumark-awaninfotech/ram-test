@@ -28,8 +28,8 @@ postgresql:
   primary:
     persistence:
       enabled: true
-      size: 10Gi
-      storageClass: "managed-premium"
+      size: 5Gi
+      storageClass: "managed-csi"
 
 zabbixProxy:
   enabled: false
