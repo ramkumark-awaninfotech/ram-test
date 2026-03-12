@@ -1,0 +1,35 @@
+# helm/zabbix-values.yaml
+zabbixServer:
+  enabled: true
+  replicaCount: 1
+  resources:
+    requests:
+      cpu: 200m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+zabbixWeb:
+  enabled: true
+  replicaCount: 1
+  service:
+    type: LoadBalancer
+    port: 80
+
+zabbixAgent:
+  enabled: true
+
+postgresql:
+  enabled: true
+  auth:
+    database: zabbix
+    username: zabbix
+  primary:
+    persistence:
+      enabled: true
+      size: 10Gi
+      storageClass: "managed-premium"
+
+zabbixProxy:
+  enabled: false
