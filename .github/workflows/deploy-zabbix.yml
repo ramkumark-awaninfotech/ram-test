@@ -98,9 +98,9 @@ jobs:
             --values helm/zabbix-values.yaml \
             --set zabbixServer.enabled=true \
             --set postgresql.auth.existingSecret=zabbix-db-secret \
-            --timeout 20m \
+            --timeout 30m \
             --wait \
-            --atomic
+            --debug
 
       - name: Apply additional manifests
         run: |
