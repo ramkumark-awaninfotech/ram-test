@@ -82,11 +82,14 @@ jobs:
         run: |
           kubectl apply -f k8s/namespace.yaml
 
-      - name: Create Zabbix secrets
+      - name: Create Zabbix DB secret
         run: |
-          kubectl create secret generic zabbix-db-secret \
-            --from-literal=POSTGRES_USER=${{ secrets.ZABBIX_DB_USER }} \
-            --from-literal=POSTGRES_PASSWORD=${{ secrets.ZABBIX_DB_PASSWORD }} \
+          kubectl create secret generic zabbix-db-access \
+            --from-literal=user=${{ secrets.ZABBIX_DB_USER }} \
+            --from-literal=password=${{ secrets.ZABBIX_DB_PASSWORD }} \
+            --from-literal=dbname=zabbix \
+            --from-literal=host=zabbix-postgresql \
+            --from-literal=port=5432 \
             --namespace=${{ env.NAMESPACE }} \
             --dry-run=client -o yaml | kubectl apply -f -
 
@@ -95,25 +98,36 @@ jobs:
           helm upgrade --install ${{ env.HELM_RELEASE_NAME }} zabbix-community/zabbix \
             --namespace ${{ env.NAMESPACE }} \
             --values helm/zabbix-values.yaml \
-            --set zabbixServer.enabled=true \
-            --set postgresql.auth.existingSecret=zabbix-db-secret \
-            --timeout 15m \
+            --set postgresAccess.existingSecretName=zabbix-db-access \
+            --timeout 30m \
             --debug
-            # removed --wait and --atomic to prevent timeout failures
 
       - name: Wait for pods to be ready
         run: |
-          echo "Waiting for Zabbix pods to start..."
-          kubectl rollout status deployment -n ${{ env.NAMESPACE }} --timeout=15m || true
+          echo "Waiting for Zabbix pods..."
+          sleep 30
+          kubectl rollout status deployment/zabbix-zabbix-server \
+            -n ${{ env.NAMESPACE }} --timeout=10m || true
+          kubectl rollout status deployment/zabbix-zabbix-web \
+            -n ${{ env.NAMESPACE }} --timeout=10m || true
+          echo "--- Pod Status ---"
           kubectl get pods -n ${{ env.NAMESPACE }}
+          echo "--- PVC Status ---"
+          kubectl get pvc -n ${{ env.NAMESPACE }}
 
       - name: Verify deployment
         run: bash scripts/verify-deployment.sh ${{ env.NAMESPACE }}
 
-      - name: Output Zabbix URL
+      - name: Output Zabbix access info
         run: |
           echo "### Zabbix Deployment Complete 🚀" >> $GITHUB_STEP_SUMMARY
-          echo "**Access via port-forward:**" >> $GITHUB_STEP_SUMMARY
-          echo "\`kubectl port-forward svc/zabbix-zabbix-web 8080:80 -n monitoring\`" >> $GITHUB_STEP_SUMMARY
-          echo "Then open: http://localhost:8080/zabbix" >> $GITHUB_STEP_SUMMARY
-          kubectl get pods -n ${{ env.NAMESPACE }}
+          echo "**Namespace:** ${{ env.NAMESPACE }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Port Forward Command:**" >> $GITHUB_STEP_SUMMARY
+          echo "\`kubectl port-forward svc/zabbix-zabbix-web 8080:80 -n ${{ env.NAMESPACE }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**URL:** http://localhost:8080" >> $GITHUB_STEP_SUMMARY
+          echo "**Default Login:** Admin / zabbix" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Pod Status" >> $GITHUB_STEP_SUMMARY
+          kubectl get pods -n ${{ env.NAMESPACE }} >> $GITHUB_STEP_SUMMARY || true
+          echo "### PVC Status" >> $GITHUB_STEP_SUMMARY
+          kubectl get pvc -n ${{ env.NAMESPACE }} >> $GITHUB_STEP_SUMMARY || true
