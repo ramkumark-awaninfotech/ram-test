@@ -36,6 +36,10 @@ postgresql:
   auth:
     database: zabbix
     username: zabbix
+    existingSecret: zabbix-db-secret
+    secretKeys:
+      adminPasswordKey: POSTGRES_PASSWORD
+      userPasswordKey: POSTGRES_PASSWORD
   primary:
     persistence:
       enabled: true
