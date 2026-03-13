@@ -88,7 +88,14 @@ jobs:
             --from-literal=POSTGRES_USER=${{ secrets.ZABBIX_DB_USER }} \
             --from-literal=POSTGRES_PASSWORD=${{ secrets.ZABBIX_DB_PASSWORD }} \
             --namespace=${{ env.NAMESPACE }} \
-            --dry-run=client -o yaml | kubectl apply -f -
+            --dry-run=client -o yaml | \
+          kubectl label --local -f - \
+            app.kubernetes.io/managed-by=Helm --dry-run=client -o yaml | \
+          kubectl annotate --local -f - \
+            meta.helm.sh/release-name=${{ env.HELM_RELEASE_NAME }} \
+            meta.helm.sh/release-namespace=${{ env.NAMESPACE }} \
+            --dry-run=client -o yaml | \
+          kubectl apply -f -
  
       - name: Deploy / Upgrade Zabbix
         run: |
