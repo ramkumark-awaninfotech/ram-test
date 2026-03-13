@@ -113,7 +113,7 @@ jobs:
       - name: Output Zabbix URL
         run: |
           echo "### Zabbix Deployment Complete 🚀" >> $GITHUB_STEP_SUMMARY
-          EXTERNAL_IP=$(kubectl get svc -n ${{ env.NAMESPACE }} \
-            -l "app.kubernetes.io/component=zabbix-web" \
-            -o jsonpath='{.items[0].status.loadBalancer.ingress[0].ip}')
-          echo "**Zabbix URL:** http://${EXTERNAL_IP}/zabbix" >> $GITHUB_STEP_SUMMARY
+          echo "**Access via port-forward:**" >> $GITHUB_STEP_SUMMARY
+          echo "\`kubectl port-forward svc/zabbix-zabbix-web 8080:80 -n monitoring\`" >> $GITHUB_STEP_SUMMARY
+          echo "Then open: http://localhost:8080/zabbix" >> $GITHUB_STEP_SUMMARY
+          kubectl get pods -n ${{ env.NAMESPACE }}
