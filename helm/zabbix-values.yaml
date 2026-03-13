@@ -4,8 +4,8 @@ zabbixServer:
   replicaCount: 1
   resources:
     requests:
-      cpu: 200m
-      memory: 256Mi
+      cpu: 100m        # reduced from 200m
+      memory: 128Mi    # reduced from 256Mi
     limits:
       cpu: 500m
       memory: 512Mi
@@ -13,12 +13,23 @@ zabbixServer:
 zabbixWeb:
   enabled: true
   replicaCount: 1
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 300m
+      memory: 256Mi
   service:
-    type: ClusterIP
+    type: LoadBalancer  # changed from ClusterIP so you get a public IP
     port: 80
 
 zabbixAgent:
   enabled: true
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
 
 postgresql:
   enabled: true
@@ -30,6 +41,13 @@ postgresql:
       enabled: true
       size: 5Gi
       storageClass: "managed-csi"
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        cpu: 300m
+        memory: 256Mi
 
 zabbixProxy:
   enabled: false
