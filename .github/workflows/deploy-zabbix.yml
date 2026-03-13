@@ -92,7 +92,17 @@ jobs:
             --from-literal=port=5432 \
             --namespace=${{ env.NAMESPACE }} \
             --dry-run=client -o yaml | kubectl apply -f -
-
+            
+      - name: Delete postgresql StatefulSet for recreation
+        run: |
+          kubectl delete statefulset zabbix-postgresql \
+            -n ${{ env.NAMESPACE }} \
+            --cascade=orphan || true
+          kubectl delete pod zabbix-postgresql-0 \
+            -n ${{ env.NAMESPACE }} || true
+          echo "Waiting for pod termination..."
+          sleep 15
+          
       - name: Deploy / Upgrade Zabbix
         run: |
           helm upgrade --install ${{ env.HELM_RELEASE_NAME }} zabbix-community/zabbix \
