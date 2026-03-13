@@ -105,8 +105,8 @@ jobs:
           
       - name: Deploy / Upgrade Zabbix
         run: |
-          helm upgrade --install ${{ env.HELM_RELEASE_NAME }} zabbix-community/zabbix \
-            --namespace ${{ env.NAMESPACE }} \
+          helm upgrade --install zabbix zabbix-community/zabbix \
+            --namespace monitoring \
             --values helm/zabbix-values.yaml \
             --set postgresAccess.existingSecretName=zabbix-db-access \
             --timeout 30m \
