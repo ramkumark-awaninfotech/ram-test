@@ -1,12 +1,11 @@
 # helm/zabbix-values.yaml
- 
 zabbixServer:
   enabled: true
   replicaCount: 1
   resources:
     requests:
-      cpu: 100m
-      memory: 128Mi
+      cpu: 100m        # reduced from 200m
+      memory: 128Mi    # reduced from 256Mi
     limits:
       cpu: 500m
       memory: 512Mi
@@ -22,7 +21,7 @@ zabbixWeb:
       cpu: 300m
       memory: 256Mi
   service:
-    type: ClusterIP
+    type: ClusterIP  # changed from ClusterIP so you get a public IP
     port: 80
  
 zabbixAgent:

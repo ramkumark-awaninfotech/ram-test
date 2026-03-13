@@ -90,15 +90,6 @@ jobs:
             --namespace=${{ env.NAMESPACE }} \
             --dry-run=client -o yaml | kubectl apply -f -
  
-      - name: Delete postgresql StatefulSet for recreation
-        run: |
-          kubectl delete statefulset zabbix-postgresql \
-            -n ${{ env.NAMESPACE }} --cascade=orphan || true
-          kubectl delete pod zabbix-postgresql-0 \
-            -n ${{ env.NAMESPACE }} || true
-          echo "Waiting for pod termination..."
-          sleep 15
- 
       - name: Deploy / Upgrade Zabbix
         run: |
           helm upgrade --install ${{ env.HELM_RELEASE_NAME }} zabbix-community/zabbix \
@@ -108,15 +99,13 @@ jobs:
             --set postgresql.auth.existingSecret=zabbix-db-secret \
             --timeout 15m \
             --debug
+            # removed --wait and --atomic to prevent timeout failures
  
       - name: Wait for pods to be ready
         run: |
           echo "Waiting for Zabbix pods to start..."
           kubectl rollout status deployment -n ${{ env.NAMESPACE }} --timeout=15m || true
-          echo "--- Pod Status ---"
           kubectl get pods -n ${{ env.NAMESPACE }}
-          echo "--- PVC Status ---"
-          kubectl get pvc -n ${{ env.NAMESPACE }}
  
       - name: Verify deployment
         run: bash scripts/verify-deployment.sh ${{ env.NAMESPACE }}
@@ -126,10 +115,5 @@ jobs:
           echo "### Zabbix Deployment Complete 🚀" >> $GITHUB_STEP_SUMMARY
           echo "**Access via port-forward:**" >> $GITHUB_STEP_SUMMARY
           echo "\`kubectl port-forward svc/zabbix-zabbix-web 8080:80 -n monitoring\`" >> $GITHUB_STEP_SUMMARY
-          echo "Then open: http://localhost:8080" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### Pod Status" >> $GITHUB_STEP_SUMMARY
-          kubectl get pods -n ${{ env.NAMESPACE }} >> $GITHUB_STEP_SUMMARY || true
-          echo "### PVC Status" >> $GITHUB_STEP_SUMMARY
-          kubectl get pvc -n ${{ env.NAMESPACE }} >> $GITHUB_STEP_SUMMARY || true
- 
+          echo "Then open: http://localhost:8080/zabbix" >> $GITHUB_STEP_SUMMARY
+          kubectl get pods -n ${{ env.NAMESPACE }}
