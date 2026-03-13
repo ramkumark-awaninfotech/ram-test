@@ -1,18 +1,28 @@
 # helm/zabbix-values.yaml
-zabbixServer:
-  enabled: true
-  replicaCount: 1
-  resources:
-    requests:
-      cpu: 100m        # reduced from 200m
-      memory: 128Mi    # reduced from 256Mi
-    limits:
-      cpu: 500m
-      memory: 512Mi
 
-zabbixWeb:
+postgresAccess:
+  database: zabbix
+  user: zabbix
+  password: ""                          # leave empty - using existingSecretName
+  existingSecretName: zabbix-db-access  # ← correct way for this chart
+  host: zabbix-postgresql
+  port: "5432"
+  secretUserKey: user
+  secretPasswordKey: password
+  secretDBKey: dbname
+
+postgresql:
   enabled: true
-  replicaCount: 1
+  image:
+    repository: postgres
+    tag: 16
+    pullPolicy: IfNotPresent
+  persistence:
+    enabled: true
+    existingClaimName: false
+    storageSize: 5Gi                    # ← correct key for this chart
+  extraRuntimeParameters:
+    max_connections: 100
   resources:
     requests:
       cpu: 100m
@@ -21,37 +31,76 @@ zabbixWeb:
       cpu: 300m
       memory: 256Mi
   service:
-    type: ClusterIP  # changed from ClusterIP so you get a public IP
+    type: ClusterIP
+    port: 5432
+
+zabbixServer:
+  enabled: true
+  replicaCount: 1
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  service:
+    type: ClusterIP
+    port: 10051
+
+zabbixWeb:
+  enabled: true
+  replicaCount: 1
+  port: 8080
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 300m
+      memory: 256Mi
+  service:
+    type: ClusterIP
     port: 80
+  livenessProbe:
+    failureThreshold: 6
+    httpGet:
+      path: /ping
+      port: zabbix-web
+      scheme: HTTP
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    successThreshold: 1
+    timeoutSeconds: 5
+  readinessProbe:
+    failureThreshold: 6
+    httpGet:
+      path: /ping
+      port: zabbix-web
+      scheme: HTTP
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    successThreshold: 1
+    timeoutSeconds: 5
 
 zabbixAgent:
   enabled: true
+  runAsDaemonSet: true
   resources:
     requests:
       cpu: 50m
       memory: 64Mi
 
-postgresql:
+zabbixWebService:
   enabled: true
-  auth:
-    database: zabbix
-    username: zabbix
-    existingSecret: zabbix-db-secret
-    secretKeys:
-      adminPasswordKey: POSTGRES_PASSWORD
-      userPasswordKey: POSTGRES_PASSWORD
-  primary:
-    persistence:
-      enabled: true
-      size: 5Gi
-      storageClass: "managed-csi"
-    resources:
-      requests:
-        cpu: 100m
-        memory: 128Mi
-      limits:
-        cpu: 300m
-        memory: 256Mi
+  replicaCount: 1
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
 
 zabbixProxy:
   enabled: false
+
+kube-state-metrics:
+  enabled: true
