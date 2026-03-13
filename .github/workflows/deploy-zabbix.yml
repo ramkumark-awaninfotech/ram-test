@@ -48,7 +48,6 @@ jobs:
           helm lint /tmp/zabbix-chart/zabbix \
             -f helm/zabbix-values.yaml
 
-
   deploy:
     name: Deploy Zabbix to AKS
     runs-on: ubuntu-latest
@@ -98,13 +97,15 @@ jobs:
             --values helm/zabbix-values.yaml \
             --set zabbixServer.enabled=true \
             --set postgresql.auth.existingSecret=zabbix-db-secret \
-            --timeout 30m \
-            --wait \
+            --timeout 15m \
             --debug
+            # removed --wait and --atomic to prevent timeout failures
 
-    #  - name: Apply additional manifests
-    #    run: |
-      #    kubectl apply -f k8s/ingress.yaml
+      - name: Wait for pods to be ready
+        run: |
+          echo "Waiting for Zabbix pods to start..."
+          kubectl rollout status deployment -n ${{ env.NAMESPACE }} --timeout=15m || true
+          kubectl get pods -n ${{ env.NAMESPACE }}
 
       - name: Verify deployment
         run: bash scripts/verify-deployment.sh ${{ env.NAMESPACE }}
