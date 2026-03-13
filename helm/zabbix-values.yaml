@@ -21,7 +21,7 @@ zabbixWeb:
       cpu: 300m
       memory: 256Mi
   service:
-    type: LoadBalancer  # changed from ClusterIP so you get a public IP
+    type: ClusterIP  # changed from ClusterIP so you get a public IP
     port: 80
 
 zabbixAgent:
